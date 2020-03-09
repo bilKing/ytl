@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.demo.module.baseSys.mapper.SysBookMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" type="com.example.demo.entity.baseEntity.bookEntity">
+        <id column="id" property="id"/>
+        <result column="book_id" property="bookId"/>
+        <result column="book_type" property="bookType"/>
+        <result column="book_name" property="bookName"/>
+        <result column="borrow_book_time" property="borrowBookTime"/>
+        <result column="return_book_time" property="returnBookTime"/>
+        <result column="borrow_user" property="borrowUser"/>
+        <result column="lend" property="lend"/>
+        <result column="state" property="state"/>
+        <result column="book_add_year" property="bookAddYear"/>
+        <result column="forbidden_time" property="forbiddenTime"/>
+        <result column="book_price" property="bookPrice"/>
+    </resultMap>
+    <insert id="insertNewBooks">
+        INSERT IGNORE INTO sys_book (id,book_id,book_type,book_name,book_add_year,book_price)
+        VALUES
+        <foreach collection="list" item="bookEntity" separator=",">
+            (#{bookEntity.id},#{bookEntity.bookId},#{bookEntity.bookType},#{bookEntity.bookName},#{bookEntity.bookAddYear},#{bookEntity.bookPrice})
+        </foreach>
+    </insert>
+
+    <select id="selectBookBorrowList" resultType="com.example.demo.pojo.basePojo.dto.bookBorrowDto">
+        select
+        id,
+        book_id,
+        book_type,
+        lend,
+        book_name,
+        lend
+        from
+        sys_book
+        <where>
+            state = 1
+            <!--按照图书类型-->
+            <if test="form.bookType !=null and form.bookType !=''">
+                and book_type like CONCAT('%', #{form.bookType}, '%')
+            </if>
+            <!--按照图书名字-->
+            <if test="form.bookName !=null and form.bookName !=''">
+                and book_name like CONCAT('%', #{form.bookName}, '%')
+            </if>
+            <!--按照图书id-->
+            <if test="form.bookId !=null and form.bookId !=''">
+                and book_id = #{form.bookId}
+            </if>
+        </where>
+    </select>
+
+    <select id="selectBookList" resultType="com.example.demo.entity.baseEntity.bookEntity">
+        select *
+        from
+        sys_book
+        <where>
+            <!--按照图书类型-->
+            <if test="form.bookType !=null and form.bookType !=''">
+                book_type like CONCAT('%', #{form.bookType}, '%')
+            </if>
+            <!--按照图书名字-->
+            <if test="form.bookName !=null and form.bookName !=''">
+                and book_name like CONCAT('%', #{form.bookName}, '%')
+            </if>
+            <!--按照图书id-->
+            <if test="form.bookId !=null and form.bookId !=''">
+                and book_id = #{form.bookId}
+            </if>
+        </where>
+    </select>
+</mapper>

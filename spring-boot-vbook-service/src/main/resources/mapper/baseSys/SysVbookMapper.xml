@@ -1,0 +1,143 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.demo.module.baseSys.mapper.SysVbookMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" type="com.example.demo.entity.baseEntity.userEntity">
+        <id column="id" property="id"/>
+        <result column="user_name" property="userName"/>
+        <result column="stu_id" property="stuId"/>
+        <result column="user_password" property="userPassword"/>
+        <result column="user_class" property="userClass"/>
+        <result column="user_specialities" property="userSpecialities"/>
+        <result column="user_authority" property="userAuthority"/>
+        <result column="user_graduation_year" property="userGraduationYear"/>
+        <result column="state" property="state"/>
+        <result column="forbidden_time" property="forbiddenTime"/>
+    </resultMap>
+    <insert id="insertNewUsers">
+        INSERT IGNORE INTO sys_user (id,user_name,stu_id,user_password,user_class,user_specialities,user_authority,user_graduation_year)
+        VALUES
+        <foreach collection="newUserEntities" item="userEntity" separator=",">
+            (#{userEntity.id},#{userEntity.userName},#{userEntity.stuId},#{userEntity.userPassword},#{userEntity.userClass},#{userEntity.userSpecialities},#{userEntity.userAuthority},#{userEntity.userGraduationYear})
+        </foreach>
+    </insert>
+
+    <update id="forbiddenBookBorrow">
+        UPDATE sys_borrow
+        SET
+        forbidden_time = #{forbiddenBookBorrow.forbiddenTime},
+        state = 0
+        WHERE
+        stu_id in (
+        <foreach collection="userEntities" item="userEntity" separator=",">
+            #{userEntity.stuId}
+        </foreach>
+        )
+    </update>
+
+    <select id="selectBorrowCount" resultType="com.example.demo.pojo.exPojo.dto.borrowSpecialitiesCountDto">
+        select
+        count(*) as bookNum,
+        t1.user_specialities
+        from
+        sys_user t1 LEFT JOIN sys_borrow t2 ON t1.stu_id = t2.stu_id
+        WHERE t1.state = 1
+        AND t2.state = 1
+        AND t2.lend = 0
+        <!--按照预计毕业年份-->
+        <if test="form.userGraduationYear !=null and form.userGraduationYear !=''">
+            and t1.user_graduation_year = #{form.userGraduationYear}
+        </if>
+        <!--按照开始时间-->
+        <if test="form.start !=null and form.start  !=''">
+            and (t2.borrow_time &gt;= #{form.start}
+            OR  t2.return_time &gt;= #{form.start})
+        </if>
+        <!--按照结束时间-->
+        <if test="form.end !=null and form.end  !=''">
+            and (t2.borrow_time &lt;= CONCAT(#{form.end},' 23:59:59 999')
+            OR  t2.return_time &lt;= CONCAT(#{form.end},' 23:59:59 999'))
+        </if>
+        <!--最少借书天数-->
+        <if test="form.lendDay !=null and form.lendDay  !=''">
+            and t2.lend_day &gt;= #{form.lendDay}
+        </if>
+        GROUP BY
+        t1.user_specialities
+        order by
+        bookNum
+        desc
+    </select>
+
+    <select id="selectUserBorrow" resultType="com.example.demo.pojo.basePojo.dto.userBorrowDto">
+        select
+        count(*) as bookNum,
+        t1.stu_id
+        from
+        sys_user t1 LEFT JOIN sys_borrow t2 ON t1.stu_id = t2.stu_id
+        WHERE t1.state = 1
+        AND t2.state = 1
+        AND t2.lend = 0
+        <!--按照专业-->
+        <if test="form.userSpecialities !=null and form.userSpecialities !=''">
+            and t1.user_specialities like CONCAT('%', #{form.userSpecialities}, '%')
+        </if>
+        <!--按照预计毕业年份-->
+        <if test="form.userGraduationYear !=null and form.userGraduationYear !=''">
+            and t1.user_graduation_year = #{form.userGraduationYear}
+        </if>
+        <!--按照开始时间-->
+        <if test="form.start !=null and form.start  !=''">
+            and (t2.borrow_time &gt;= #{form.start}
+            OR  t2.return_time &gt;= #{form.start})
+        </if>
+        <!--按照结束时间-->
+        <if test="form.end !=null and form.end  !=''">
+            and (t2.borrow_time &lt;= CONCAT(#{form.end},' 23:59:59 999')
+            OR  t2.return_time &lt;= CONCAT(#{form.end},' 23:59:59 999'))
+        </if>
+        <!--按照借书时长-->
+        <if test="form.lendDay !=null and form.lendDay  !=''">
+            and t2.lend_day &gt;= #{form.lendDay}
+        </if>
+        GROUP BY
+        t1.stu_id
+        order by
+        t1.stu_id
+        desc
+    </select>
+
+    <select id="selectRole" resultType="com.example.demo.pojo.basePojo.dto.roleDto">
+        SELECT role_name
+        FROM role
+        WHERE #{userAuthority} &amp; role_id = role_id
+    </select>
+
+    <select id="selectUserList" resultType="com.example.demo.entity.baseEntity.userEntity">
+        SELECT *
+        FROM sys_user
+        <where>
+            <!--按照姓名-->
+            <if test="form.userName !=null and form.userName !=''">
+                user_name = #{form.userName}
+            </if>
+            <!--按照学号-->
+            <if test="form.stuId !=null and form.stuId !=''">
+                and stu_id = #{form.stuId}
+            </if>
+            <!--按照班级-->
+            <if test="form.userClass !=null and form.userClass !=''">
+                and user_class = #{form.userClass}
+            </if>
+            <!--按照专业-->
+            <if test="form.userSpecialities !=null and form.userSpecialities !=''">
+                and user_specialities = #{form.userSpecialities}
+            </if>
+            <!--按照预计毕业年份-->
+            <if test="form.userGraduationYear !=null and form.userGraduationYear !=''">
+                and user_graduation_year = #{form.userGraduationYear}
+            </if>
+        </where>
+    </select>
+</mapper>

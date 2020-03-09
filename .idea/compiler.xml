@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="CompilerConfiguration">
+    <annotationProcessing>
+      <profile name="Maven default annotation processors profile" enabled="true">
+        <sourceOutputDir name="target/generated-sources/annotations" />
+        <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
+        <outputRelativeToContentRoot value="true" />
+        <module name="Spring-Boot" />
+        <module name="spring-boot-vbook-api" />
+        <module name="spring-boot-vbook-consumer" />
+        <module name="spring-boot-vbook-service" />
+        <module name="spring-boot-vbook-service (1) (dubbo.api)" />
+        <module name="spring-boot-vbook-service (2) (dubbo.service)" />
+        <module name="SpringBoot-master" />
+      </profile>
+    </annotationProcessing>
+    <bytecodeTargetLevel>
+      <module name="Spring-Boot" target="1.5" />
+      <module name="spring-boot-vbook-api" target="1.8" />
+      <module name="spring-boot-vbook-consumer" target="1.8" />
+      <module name="spring-boot-vbook-service" target="1.8" />
+      <module name="spring-boot-vbook-service (1) (dubbo.api)" target="1.8" />
+      <module name="spring-boot-vbook-service (2) (dubbo.service)" target="1.8" />
+      <module name="SpringBoot-master" target="1.8" />
+    </bytecodeTargetLevel>
+  </component>
+</project>

@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.demo.module.baseSys.mapper.SysBookBorrowMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" type="com.example.demo.entity.baseEntity.bookBorrowEntity">
+        <id column="id" property="id"/>
+        <result column="book_id" property="bookId"/>
+        <result column="stu_id" property="stuId"/>
+        <result column="book_name" property="bookName"/>
+        <result column="borrow_time" property="borrowTime"/>
+        <result column="return_time" property="returnTime"/>
+    </resultMap>
+
+    <update id="updateBatchEnable">
+        UPDATE sys_borrow
+        SET
+        state = 1
+        WHERE
+        stu_id in (
+        <foreach collection="enableUserList" item="userEntity" separator=",">
+            #{userEntity.stuId}
+        </foreach>
+        )
+    </update>
+
+    <select id="topLendBookList" resultType="com.example.demo.pojo.exPojo.dto.topLendBookDto">
+        select
+        count(*) as lendTimes,
+        t2.book_name
+        from
+        sys_borrow AS t1 LEFT JOIN sys_book AS t2 ON t1.book_id = t2.book_id LEFT JOIN sys_user AS t3 ON t3.stu_id =
+        t1.stu_id
+        where
+        t1.state = 1
+        AND
+        t2.state = 1
+        AND
+        t3.state = 1
+        <!--按照专业-->
+        <if test="form.userSpecialities !=null and form.userSpecialities !=''">
+            and t3.user_specialities like CONCAT('%', #{form.userSpecialities}, '%')
+        </if>
+        <!--按照预计毕业年份-->
+        <if test="form.userGraduationYear !=null and form.userGraduationYear !=''">
+            and t3.user_graduation_year = #{form.userGraduationYear}
+        </if>
+        GROUP BY
+        t2.book_name
+        <choose>
+            <!--是否降序-->
+            <when test="form.isDesc =='true'">
+                ORDER by
+                lendTimes desc
+            </when>
+            <otherwise>
+                ORDER by
+                lendTimes
+            </otherwise>
+        </choose>
+    </select>
+
+    <select id="LendRecordList" resultType="com.example.demo.entity.baseEntity.bookBorrowEntity">
+        select
+        *
+        from
+        sys_borrow
+        where
+        state = 1
+        <choose>
+            <!--按照学号或者图书号搜索-->
+            <when test="form.isStuId == 'true'">
+                AND stu_id = #{form.id}
+            </when>
+            <otherwise>
+                AND book_id = #{form.id}
+            </otherwise>
+        </choose>
+        order by
+        return_time
+        desc
+    </select>
+</mapper>

@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.demo.module.baseSys.mapper.SysBookLendMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" type="com.example.demo.entity.baseEntity.bookLendEntity">
+        <id column="id" property="id"/>
+        <result column="book_id" property="bookId"/>
+        <result column="stu_id" property="stuId"/>
+        <result column="book_name" property="bookName"/>
+        <result column="borrow_time" property="borrowTime"/>
+        <result column="return_time" property="returnTime"/>
+        <result column="lend" property="lend"/>
+        <result column="lend_day" property="lendDay"/>
+    </resultMap>
+
+    <select id="selectBookName" resultType="String">
+        select
+        book_name
+        from
+        sys_book
+        where book_id = #{bookId}
+    </select>
+
+    <select id="selectLend" resultType="int">
+        select
+        COUNT(*)
+        from
+        sys_book
+        where book_id = #{bookId}
+        AND lend = 0
+    </select>
+
+    <update id="updateBorrowBook">
+        UPDATE sys_book
+        SET
+        borrow_book_time = #{newBorrow.borrowTime},
+        borrow_user = #{newBorrow.stuId},
+        lend = 1
+        WHERE book_id = #{newBorrow.bookId}
+    </update>
+
+    <update id="updateReturnBook">
+        UPDATE sys_book
+        SET
+        return_book_time = #{returnBook.returnTime},
+        lend = 0
+        WHERE book_id= #{returnBook.bookId}
+    </update>
+
+    <select id="selectBookReturnList" resultType="com.example.demo.pojo.basePojo.dto.bookReturnDto">
+        select
+        id,
+        book_id,
+        book_name,
+        borrow_time
+        from
+        sys_lend
+        where
+        stu_id=#{stuId}
+        AND
+        lend = 1
+        order by
+        borrow_time
+        desc
+    </select>
+
+    <select id="alreadyRepaidList" resultType="com.example.demo.entity.baseEntity.bookBorrowEntity">
+        select
+        *
+        from
+        sys_lend
+        where
+        lend = 0
+    </select>
+
+    <insert id="insertAlreadyRepaidList">
+        INSERT IGNORE INTO sys_borrow (id,book_id,book_name,stu_id,borrow_time,return_time,lend,lend_day)
+        VALUES
+        <foreach collection="list" item="bookBorrowEntity" separator=",">
+            (#{bookBorrowEntity.id},#{bookBorrowEntity.bookId},#{bookBorrowEntity.bookName},#{bookBorrowEntity.stuId},#{bookBorrowEntity.borrowTime},#{bookBorrowEntity.returnTime},#{bookBorrowEntity.lend},#{bookBorrowEntity.lendDay})
+        </foreach>
+    </insert>
+
+    <select id="selectOutTimeBorrowList" resultType="com.example.demo.entity.baseEntity.bookBorrowEntity">
+        select
+        book_id,
+        stu_id,
+        borrow_time
+        from
+        sys_lend
+        where
+        lend = 1
+        AND
+        borrow_time &lt;= CONCAT(#{targetTime},' 23:59:59 999')
+        <!--如果stuId不为空则是搜索某用户超期借书情况（配合登录 查询）-->
+        <if test="outTimeForm.stuId !=null and outTimeForm.stuId  !='' and outTimeForm.isStuId == 'true'">
+            and stu_id = #{outTimeForm.stuId}
+        </if>
+        <!--图书号-->
+        <if test="outTimeForm.stuId !=null and outTimeForm.stuId  !='' and outTimeForm.isStuId == 'false'">
+            and book_id = #{outTimeForm.stuId}
+        </if>
+        order by
+        borrow_time
+        desc
+    </select>
+</mapper>
